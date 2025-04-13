@@ -26,11 +26,20 @@
 
     .controls {
       margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+    }
+
+    .control-group {
+      margin-bottom: 10px;
     }
 
     label {
       font-weight: 600;
       margin-right: 10px;
+      display: block;
+      margin-bottom: 5px;
     }
 
     select {
@@ -38,6 +47,7 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 16px;
+      width: 100%;
     }
 
     table {
@@ -122,6 +132,23 @@
       color: white;
     }
 
+    .descriptions {
+      margin-top: 30px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      background-color: #f9f9f9;
+    }
+
+    .description-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .description-item {
+      margin-bottom: 10px;
+    }
+
     @media (max-width: 768px) {
       table {
         font-size: 14px;
@@ -139,42 +166,93 @@
     <h1>Design Score Matrix</h1>
 
     <div class="controls">
-      <label for="days-late">Days Late:</label>
-      <select id="days-late">
-        <option value="0">0 days</option>
-        <option value="1">1 day</option>
-        <option value="2">2 days</option>
-        <option value="3">3 days</option>
-        <option value="5">5 days</option>
-        <option value="7">7 days</option>
-        <option value="10">10 days</option>
-      </select>
+      <div class="control-group">
+        <label for="days-late">Days Late:</label>
+        <select id="days-late">
+          <option value="0">0 days</option>
+          <option value="1">1 day</option>
+          <option value="2">2 days</option>
+          <option value="3">3 days</option>
+          <option value="5">5 days</option>
+          <option value="7">7 days</option>
+          <option value="10">10 days</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="complexity">Complexity:</label>
+        <select id="complexity">
+          <option value="1">Low</option>
+          <option value="2">Medium</option>
+          <option value="3">High</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="communication">Communication:</label>
+        <select id="communication">
+          <option value="1">Poor</option>
+          <option value="2">Satisfactory</option>
+          <option value="3">Excellent</option>
+        </select>
+      </div>
     </div>
 
     <table id="score-matrix">
       <thead>
         <tr>
-          <th>Impact \ Expectations</th>
-          <th>Below (1)</th>
-          <th>Met (2)</th>
-          <th>Exceeded (3)</th>
+          <th></th>
+          <th></th>
+          <th colspan="3" style="text-align: center; background-color: #f5f5f5;">EXPECTATIONS</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th></th>
+          <th style="text-align: center;">Below</th>
+          <th style="text-align: center;">Met</th>
+          <th style="text-align: center;">Exceeded</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <th>High (3)</th>
+          <th rowspan="3" style="text-align: center; background-color: #f5f5f5; vertical-align: middle;">IMPACT</th>
+          <th style="text-align: left;">High</th>
           <td class="score-cell" id="score-3-1"></td>
           <td class="score-cell" id="score-3-2"></td>
           <td class="score-cell" id="score-3-3"></td>
         </tr>
         <tr>
-          <th>Medium (2)</th>
+          <th style="text-align: left;">Medium</th>
           <td class="score-cell" id="score-2-1"></td>
           <td class="score-cell" id="score-2-2"></td>
           <td class="score-cell" id="score-2-3"></td>
         </tr>
         <tr>
-          <th>Low (1)</th>
+          <th style="text-align: left;">Low</th>
+          <td class="score-cell" id="score-1-1"></td>
+          <td class="score-cell" id="score-1-2"></td>
+          <td class="score-cell" id="score-1-3"></td>
+        </tr>
+      </tbody>
+    </table><th>Exceeded</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th rowspan="3" style="writing-mode: vertical-lr; transform: rotate(180deg); text-align: center; background-color: #e9e9e9;">IMPACT</th>
+          <th>High</th>
+          <td class="score-cell" id="score-3-1"></td>
+          <td class="score-cell" id="score-3-2"></td>
+          <td class="score-cell" id="score-3-3"></td>
+        </tr>
+        <tr>
+          <th>Medium</th>
+          <td class="score-cell" id="score-2-1"></td>
+          <td class="score-cell" id="score-2-2"></td>
+          <td class="score-cell" id="score-2-3"></td>
+        </tr>
+        <tr>
+          <th>Low</th>
           <td class="score-cell" id="score-1-1"></td>
           <td class="score-cell" id="score-1-2"></td>
           <td class="score-cell" id="score-1-3"></td>
@@ -193,40 +271,96 @@
 
     <h2>Formula Components</h2>
     <div class="formula-container">
-      <p class="formula">Design Score = (Impact × 1.5) × (Expectations × 1.2) × Timeliness Modifier × Bonuses</p>
-      <p class="formula">Timeliness Modifier = Max(0, 1 - (Days Late × Impact × 0.03))</p>
+      <p class="formula">Design Score = (Impact × 1.5) × (Expectations × 1.2) × Adjusted Timeliness × Bonuses</p>
+      <p class="formula">Adjusted Timeliness = Max(0, 1 - (Days Late × Impact × 0.03 × Communication Factor × Complexity Factor))</p>
+      <p class="formula">Communication Factor = 1.0 for Poor, 0.8 for Satisfactory, 0.6 for Excellent</p>
+      <p class="formula">Complexity Factor = 1.0 for Low, 0.8 for Medium, 0.6 for High</p>
+      <p class="formula">Communication Bonus = 1.0 for Poor, 1.05 for Satisfactory, 1.1 for Excellent</p>
+      <p class="formula">Complexity Bonus = 1.0 for Low, 1.05 for Medium (if expectations met), 1.1 for High (if expectations met)</p>
       <p class="formula">On-Time Bonus = 1.1 if Days Late = 0, otherwise 1.0</p>
       <p class="formula">Expectations Bonus = 1.1 if Expectations ≥ 2, otherwise 1.0</p>
+    </div>
+    
+    <div class="descriptions">
+      <h2>Rating Descriptions</h2>
+      
+      <div class="description-item">
+        <div class="description-title">Complexity Levels:</div>
+        <ul>
+          <li><strong>High:</strong> My request was challenging - it required significant thought, research, or solving a unique problem.</li>
+          <li><strong>Medium:</strong> My request needed some customization or adaptation, but wasn't unusually difficult.</li>
+          <li><strong>Low:</strong> My request was straightforward and similar to standard work we've done before.</li>
+        </ul>
+      </div>
+      
+      <div class="description-item">
+        <div class="description-title">Communication Rating:</div>
+        <ul>
+          <li><strong>Excellent:</strong> The designer clearly understood my needs, asked smart questions to clarify the brief, and kept me informed throughout the process.</li>
+          <li><strong>Satisfactory:</strong> The designer understood the basics of what I needed and communicated adequately during the project.</li>
+          <li><strong>Poor:</strong> The designer misunderstood key aspects of my request or I had to repeatedly explain what I needed.</li>
+        </ul>
+      </div>
     </div>
   </div>
 
   <script>
     // Function to calculate design score
-    function calculateDesignScore(impact, expectations, daysLate) {
+    function calculateDesignScore(impact, expectations, daysLate, communication, complexity) {
       const impactWeight = 1.5;
       const expectationsWeight = 1.2;
       const timelinessBase = 0.03;
-      // Calculate timeliness modifier
-      const timelinessModifier = Math.max(0, 1 - (daysLate * impact * timelinessBase));
+      
+      // Calculate communication bonus (higher communication = better score)
+      let communicationBonus = 1.0;
+      if (communication === 2) communicationBonus = 1.05;
+      else if (communication === 3) communicationBonus = 1.1;
+      
+      // Calculate complexity bonus (higher complexity with good results = better score)
+      let complexityBonus = 1.0;
+      if (complexity === 2 && expectations >= 2) complexityBonus = 1.05;
+      else if (complexity === 3 && expectations >= 2) complexityBonus = 1.1;
+      
+      // Calculate communication factor for lateness (reduces lateness penalty)
+      let communicationFactor = 1.0;
+      if (communication === 2) communicationFactor = 0.8;
+      else if (communication === 3) communicationFactor = 0.6;
+      
+      // Calculate complexity factor for lateness (reduces lateness penalty)
+      let complexityFactor = 1.0;
+      if (complexity === 2) complexityFactor = 0.8;
+      else if (complexity === 3) complexityFactor = 0.6;
+      
+      // Calculate timeliness modifier (with adjustment for complexity and communication)
+      const timelinessModifier = Math.max(0, 1 - (daysLate * impact * timelinessBase * communicationFactor * complexityFactor));
+      
       // Add bonuses
       const onTimeBonus = daysLate === 0 ? 1.1 : 1.0;
       const expectationsBonus = (expectations >= 2) ? 1.1 : 1.0;
+      
       // Calculate raw score
       const rawScore = (impact * impactWeight) *
         (expectations * expectationsWeight) *
         timelinessModifier *
         onTimeBonus *
-        expectationsBonus;
+        expectationsBonus *
+        communicationBonus *
+        complexityBonus;
+        
       // Calculate max possible score
       const maxRawScore = (3 * impactWeight) *
         (3 * expectationsWeight) *
         1.0 *
         1.1 *
+        1.1 *
+        1.1 *
         1.1;
+        
       // Normalize to 0-100
       const normalizedScore = (rawScore / maxRawScore) * 100;
       return Math.round(normalizedScore);
     }
+    
     // Function to get CSS class based on score
     function getScoreClass(score) {
       if (score >= 80) return 'excellent';
@@ -235,29 +369,41 @@
       if (score >= 20) return 'below-average';
       return 'poor';
     }
+    
     // Function to update the matrix
     function updateMatrix() {
       const daysLate = parseInt(document.getElementById('days-late').value);
+      const communication = parseInt(document.getElementById('communication').value);
+      const complexity = parseInt(document.getElementById('complexity').value);
+      
       const impactLevels = [1, 2, 3]; // Low, Medium, High
       const expectationLevels = [1, 2, 3]; // Below, Met, Exceeded
+      
       impactLevels.forEach(impact => {
         expectationLevels.forEach(exp => {
-          const score = calculateDesignScore(impact, exp, daysLate);
+          const score = calculateDesignScore(impact, exp, daysLate, communication, complexity);
           const cell = document.getElementById(`score-${impact}-${exp}`);
+          
           // Update cell content and class
           cell.textContent = score;
+          
           // Remove all score classes
           cell.classList.remove('excellent', 'good', 'average', 'below-average', 'poor');
+          
           // Add appropriate score class
           cell.classList.add(getScoreClass(score));
         });
       });
     }
+    
     // Initialize the matrix
     document.addEventListener('DOMContentLoaded', function() {
       updateMatrix();
-      // Add event listener for days late dropdown
+      
+      // Add event listeners for all controls
       document.getElementById('days-late').addEventListener('change', updateMatrix);
+      document.getElementById('communication').addEventListener('change', updateMatrix);
+      document.getElementById('complexity').addEventListener('change', updateMatrix);
     });
   </script>
 </body>
