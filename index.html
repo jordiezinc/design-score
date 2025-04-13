@@ -1,4 +1,18 @@
-<!DOCTYPE html>
+    // Function to calculate design score
+    function calculateDesignScore(impact, expectations, daysLate, communication, complexity) {
+      // Base score calculation from impact and expectations
+      const impactScore = impact * 1.5;  // 1.5-4.5 points
+      const expectationsScore = expectations * 1.2; // 1.2-3.6 points
+      
+      // Maximum possible base score
+      const maxImpactScore = 3 * 1.5;
+      const maxExpectationsScore = 3 * 1.2;
+      
+      // Calculate timeliness penalty
+      let timelinessMultiplier = 1.0;
+      
+      if (daysLate > 0) {
+        // Adjust penalty base<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -269,16 +283,23 @@
       <div class="legend-item poor">0-19: Poor</div>
     </div>
 
-    <h2>Formula Components</h2>
+    <h2>Formula Approach</h2>
     <div class="formula-container">
-      <p class="formula">Design Score = (Impact × 1.5) × (Expectations × 1.2) × Adjusted Timeliness × Bonuses</p>
-      <p class="formula">Adjusted Timeliness = Max(0, 1 - (Days Late × Impact × 0.03 × Communication Factor × Complexity Factor))</p>
-      <p class="formula">Communication Factor = 1.0 for Poor, 0.8 for Satisfactory, 0.6 for Excellent</p>
-      <p class="formula">Complexity Factor = 1.0 for Low, 0.8 for Medium, 0.6 for High</p>
-      <p class="formula">Communication Bonus = 1.0 for Poor, 1.05 for Satisfactory, 1.1 for Excellent</p>
-      <p class="formula">Complexity Bonus = 1.0 for Low, 1.05 for Medium (if expectations met), 1.1 for High (if expectations met)</p>
-      <p class="formula">On-Time Bonus = 1.1 if Days Late = 0, otherwise 1.0</p>
-      <p class="formula">Expectations Bonus = 1.1 if Expectations ≥ 2, otherwise 1.0</p>
+      <p>The Design Score starts at 100 and applies contextual deductions:</p>
+      
+      <p class="formula">1. Impact Deduction: -15 points per level below High impact</p>
+      <p class="formula">2. Expectations Deduction: -12 points per level below Exceeded expectations</p>
+      
+      <p class="formula">3. Communication Deduction:</p>
+      <p class="formula">&nbsp;&nbsp;• For Exceeded expectations: -5 points per level below Excellent</p>
+      <p class="formula">&nbsp;&nbsp;• For Met expectations: -10 points per level below Excellent</p>
+      <p class="formula">&nbsp;&nbsp;• For Below expectations: -15 points per level below Excellent</p>
+      <p class="formula">&nbsp;&nbsp;• Communication issues penalized more (+20%) for each complexity level above Low</p>
+      
+      <p class="formula">4. Lateness Penalty: Days Late × Impact × 3</p>
+      <p class="formula">&nbsp;&nbsp;• Reduced by 20% for Medium complexity, 40% for High complexity</p>
+      <p class="formula">&nbsp;&nbsp;• Reduced by 20% for Satisfactory communication, 40% for Excellent communication</p>
+      <p class="formula">&nbsp;&nbsp;• Reduced by 10% for Met expectations, 30% for Exceeded expectations</p>
     </div>
     
     <div class="descriptions">
@@ -307,58 +328,71 @@
   <script>
     // Function to calculate design score
     function calculateDesignScore(impact, expectations, daysLate, communication, complexity) {
-      const impactWeight = 1.5;
-      const expectationsWeight = 1.2;
-      const timelinessBase = 0.03;
+      // Start with perfect score
+      let score = 100;
       
-      // Calculate communication bonus (higher communication = better score)
-      let communicationBonus = 1.0;
-      if (communication === 2) communicationBonus = 1.05;
-      else if (communication === 3) communicationBonus = 1.1;
+      // Deductions for impact below maximum
+      if (impact < 3) {
+        // Larger deduction for low impact vs medium impact
+        score -= (3 - impact) * 15;
+      }
       
-      // Calculate complexity bonus (higher complexity with good results = better score)
-      let complexityBonus = 1.0;
-      if (complexity === 2 && expectations >= 2) complexityBonus = 1.05;
-      else if (complexity === 3 && expectations >= 2) complexityBonus = 1.1;
+      // Deductions for expectations below maximum
+      if (expectations < 3) {
+        // Larger deduction for below expectations vs met expectations
+        score -= (3 - expectations) * 12;
+      }
       
-      // Calculate communication factor for lateness (reduces lateness penalty)
-      let communicationFactor = 1.0;
-      if (communication === 2) communicationFactor = 0.8;
-      else if (communication === 3) communicationFactor = 0.6;
-      
-      // Calculate complexity factor for lateness (reduces lateness penalty)
-      let complexityFactor = 1.0;
-      if (complexity === 2) complexityFactor = 0.8;
-      else if (complexity === 3) complexityFactor = 0.6;
-      
-      // Calculate timeliness modifier (with adjustment for complexity and communication)
-      const timelinessModifier = Math.max(0, 1 - (daysLate * impact * timelinessBase * communicationFactor * complexityFactor));
-      
-      // Add bonuses
-      const onTimeBonus = daysLate === 0 ? 1.1 : 1.0;
-      const expectationsBonus = (expectations >= 2) ? 1.1 : 1.0;
-      
-      // Calculate raw score
-      const rawScore = (impact * impactWeight) *
-        (expectations * expectationsWeight) *
-        timelinessModifier *
-        onTimeBonus *
-        expectationsBonus *
-        communicationBonus *
-        complexityBonus;
+      // Communication deduction - varies based on expectations
+      if (communication < 3) {
+        let commPenalty;
+        if (expectations === 3) {
+          // Exceeded expectations - communication matters less
+          commPenalty = (3 - communication) * 5;
+        } else if (expectations === 2) {
+          // Met expectations - communication matters more
+          commPenalty = (3 - communication) * 10;
+        } else {
+          // Below expectations - communication really matters
+          commPenalty = (3 - communication) * 15;
+        }
         
-      // Calculate max possible score
-      const maxRawScore = (3 * impactWeight) *
-        (3 * expectationsWeight) *
-        1.0 *
-        1.1 *
-        1.1 *
-        1.1 *
-        1.1;
+        // Communication issues hurt more on complex projects
+        if (complexity > 1) {
+          commPenalty *= (1 + (complexity - 1) * 0.2);
+        }
         
-      // Normalize to 0-100
-      const normalizedScore = (rawScore / maxRawScore) * 100;
-      return Math.round(normalizedScore);
+        score -= commPenalty;
+      }
+      
+      // Lateness penalty
+      if (daysLate > 0) {
+        // Base lateness penalty depends on impact (higher impact = higher penalty)
+        let baseLatePenalty = daysLate * impact * 3;
+        
+        // Reduce penalty based on complexity (higher complexity = more understanding)
+        let complexityFactor = 1.0;
+        if (complexity === 2) complexityFactor = 0.8;
+        else if (complexity === 3) complexityFactor = 0.6;
+        
+        // Reduce penalty based on communication (better communication = more understanding)
+        let communicationFactor = 1.0;
+        if (communication === 2) communicationFactor = 0.8;
+        else if (communication === 3) communicationFactor = 0.6;
+        
+        // More reduction for exceeding expectations
+        let expectationsFactor = 1.0;
+        if (expectations === 3) expectationsFactor = 0.7;
+        else if (expectations === 2) expectationsFactor = 0.9;
+        
+        // Apply all modifiers
+        let adjustedLatePenalty = baseLatePenalty * complexityFactor * communicationFactor * expectationsFactor;
+        
+        score -= adjustedLatePenalty;
+      }
+      
+      // Ensure score doesn't go below 0
+      return Math.max(0, Math.round(score));
     }
     
     // Function to get CSS class based on score
